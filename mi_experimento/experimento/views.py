@@ -10,36 +10,57 @@ from experimento.utils import generate_mean_list
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import ExperimentResponse  # Asegúrate de tener un modelo adecuado para guardar las respuestas
 
 # experimento/views.py
 
 import json
 
+# @csrf_exempt
+@csrf_exempt  # Remove this in production if using CSRF protection
 def save_response(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        trial_id = data.get('trial_id')
+        
+        print('save_response', data)
+
+        trial_id = data.get('trial_id')  # This can be used as trial_number
         response = data.get('response')
         reaction_time = data.get('reaction_time')
-        
+        stimulus = data.get('stimulus')  # New data to create a trial
+        block_id = 1 # data.get('block_id')  # Assuming you send the block ID in the request
+
         try:
-            trial = Trial.objects.get(id=trial_id)
-            trial.response = response
-            trial.reaction_time = reaction_time
-            # Aquí puedes implementar la lógica para determinar si la respuesta es correcta
-            # Por simplicidad, supongamos que d_value ya está almacenado
-            d_value = int(trial.stimulus.split(',')[0])  # Ajusta según tu lógica
-            prom_fijo = 50  # Ajusta según tu lógica
-            if (response == '<' and d_value < prom_fijo) or (response == '>' and d_value > prom_fijo):
-                trial.correct = True
-            else:
-                trial.correct = False
+            # Retrieve the Block instance using the provided block_id
+            block = Block.objects.get(id=block_id)
+
+            # Create a new Trial object with the Block instance
+            trial = Trial(
+                block=block,  # Assign the Block instance here
+                trial_id=trial_id,
+                stimulus=stimulus,
+                response=response,
+                correct=False,  # Default value, will set based on logic below
+                reaction_time=reaction_time
+            )
+            
+            # Implement your logic to determine if the response is correct
+            d_value = stimulus[0]  # Example extraction from stimulus
+            prom_fijo = 50  # Define your comparison value
+
+            # if (response == '<' and d_value < prom_fijo) or (response == '>' and d_value > prom_fijo):
+                # trial.correct = True
+            
+            # Save the trial to the database
             trial.save()
-            return JsonResponse({'status': 'success'})
-        except Trial.DoesNotExist:
-            return JsonResponse({'status': 'fail', 'message': 'Trial not found'}, status=404)
+            return JsonResponse({'status': 'success', 'trial_id': trial.id})  # Optionally return the new trial ID
+        except Block.DoesNotExist:
+            return JsonResponse({'status': 'fail', 'message': 'Block not found'}, status=404)
+        except Exception as e:
+            print(f"Error creating trial: {e}")
+            return JsonResponse({'status': 'fail', 'message': 'Error creating trial'}, status=500)
+
     return JsonResponse({'status': 'fail'}, status=400)
+
 
 def index(request):
     if request.method == 'POST':
@@ -82,25 +103,6 @@ def run_block(request, session_id, block_number):
         'trials': trials_data,
     })
 
-@csrf_exempt
-def save_response(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        trial_id = data.get('trial_id')
-        response = data.get('response')
-        reaction_time = data.get('reaction_time')
-
-        # Guarda la respuesta en la base de datos
-        ExperimentResponse.objects.create(
-            trial_id=trial_id,
-            response=response,
-            reaction_time=reaction_time
-        )
-
-        # Envía una respuesta JSON de confirmación
-        return JsonResponse({'status': 'success'})
-
-    return JsonResponse({'status': 'error'}, status=400)
 
 def finish_experiment(request, session_id):
     session = ExperimentSession.objects.get(id=session_id)

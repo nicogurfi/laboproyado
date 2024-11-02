@@ -20,12 +20,14 @@
     <div id="stimulus"></div>
     <div id="response">
         <!-- Corrige la llamada a la función onclick -->
-        <button onclick="sendResponse('<')">&lt; Promedio MENOR a {{ trials.0.prom_fijo }}</button>
-        <button onclick="sendResponse('>')">&gt; Promedio MAYOR a {{ trials.0.prom_fijo }}</button>
+        <button onclick="sendResponse('<')">&lt; Promedio MENOR a {{ trialsD.0.prom_fijo }}</button>
+        <button onclick="sendResponse('>')">&gt; Promedio MAYOR a {{ trialsD.0.prom_fijo }}</button>
     </div>
 
-    <script>44
-        const trials = {{trials|safe}};
+    <script>
+        const trialsD = {{ trials | safe }};
+        console.log(trialsD);
+
         let currentTrial = 0; // Controla el índice del trial actual
 
         // Función para mostrar los números secuencialmente
@@ -46,17 +48,24 @@
 
         // Función para enviar la respuesta y luego mostrar la siguiente secuencia
         function sendResponse(response) {
-            const trial = trials[currentTrial];
+            const trial = trialsD[currentTrial];
             const reactionTime = 1.0;
+
+            console.log('called sendResponse from run_block.html', trial)
+
+            const csrfToken = getCookie('csrftoken');
+
+            console.log({ trial, csrfToken })
 
             fetch('/save_response/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-CSRFToken': csrfToken,
                 },
                 body: JSON.stringify({
-                    'trial_id': trial.id,
+                    'trial_id': trial.trial_number || null,
+                    'stimulus': trial.stimulus     || [],
                     'response': response,
                     'reaction_time': reactionTime,
                 }),
@@ -66,11 +75,11 @@
                 if (data.status === 'success') {
                     currentTrial++; 
 
-                    if (currentTrial < trials.length) {
+                    if (currentTrial < trialsD.length) {
                         // Muestra una nueva secuencia de números para el próximo trial
-                        showNumbers(trials[currentTrial].stimulus, 1); // Muestra 1 segundo cada número
+                        showNumbers(trialsD[currentTrial].stimulus, 1); // Muestra 1 segundo cada número
                     } else {
-                        // Redirige al finalizar todos los trials
+                        // Redirige al finalizar todos los trialsD
                         window.location.href = `/finish/{{ session_id }}/`;
                     }
                 }
@@ -81,8 +90,25 @@
         }
 
         // Iniciar el primer trial al cargar la página
-        if (trials.length > 0) {
-            showNumbers(trials[currentTrial].stimulus, 1); // Muestra la primera secuencia de números
+        if (trialsD.length > 0) {
+            showNumbers(trialsD[currentTrial].stimulus, 1); // Muestra la primera secuencia de números
+        }
+
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Check if this cookie string begins with the name we want
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
     </script>
 </body>
