@@ -1,0 +1,19 @@
+<!-- experimento/templates/experimento/index.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Experimento ADO</title>
+</head>
+<body>
+    <h1>Bienvenido al Experimento ADO</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="participant_id">ID del Participante:</label>
+        <input type="text" id="participant_id" name="participant_id" required>
+        <button type="submit">Comenzar</button>
+    </form>
+</body>
+</html>
+
+

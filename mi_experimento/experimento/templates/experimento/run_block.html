@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bloque {{ block_id }}</title>
+    <style>
+        /* Estilos básicos */
+        #stimulus {
+            font-size: 48px;
+            text-align: center;
+            margin-top: 20%;
+        }
+        #response {
+            text-align: center;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Bloque {{ block_id }}</h2>
+    <div id="stimulus"></div>
+    <div id="response">
+        <!-- Corrige la llamada a la función onclick -->
+        <button onclick="sendResponse('<')">&lt; Promedio MENOR a {{ trials.0.prom_fijo }}</button>
+        <button onclick="sendResponse('>')">&gt; Promedio MAYOR a {{ trials.0.prom_fijo }}</button>
+    </div>
+
+    <script>44
+        const trials = {{trials|safe}};
+        let currentTrial = 0; // Controla el índice del trial actual
+
+        // Función para mostrar los números secuencialmente
+        function showNumbers(numbers, displayTime) {
+            let index = 0; // Índice del número a mostrar
+            const stimulusDiv = document.getElementById('stimulus');
+
+            const interval = setInterval(() => {
+                if (index < numbers.length) {
+                    stimulusDiv.innerText = numbers[index]; // Muestra el número actual
+                    index++; // Incrementa el índice
+                } else {
+                    clearInterval(interval); // Detiene el intervalo cuando se terminan los números
+                    stimulusDiv.innerText = ''; // Limpia el estímulo después de mostrar todos los números
+                }
+            }, displayTime * 1000); // Cambia el número cada segundo
+        }
+
+        // Función para enviar la respuesta y luego mostrar la siguiente secuencia
+        function sendResponse(response) {
+            const trial = trials[currentTrial];
+            const reactionTime = 1.0;
+
+            fetch('/save_response/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({
+                    'trial_id': trial.id,
+                    'response': response,
+                    'reaction_time': reactionTime,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentTrial++; 
+
+                    if (currentTrial < trials.length) {
+                        // Muestra una nueva secuencia de números para el próximo trial
+                        showNumbers(trials[currentTrial].stimulus, 1); // Muestra 1 segundo cada número
+                    } else {
+                        // Redirige al finalizar todos los trials
+                        window.location.href = `/finish/{{ session_id }}/`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Error al guardar la respuesta:", error);
+            });
+        }
+
+        // Iniciar el primer trial al cargar la página
+        if (trials.length > 0) {
+            showNumbers(trials[currentTrial].stimulus, 1); // Muestra la primera secuencia de números
+        }
+    </script>
+</body>
+</html>

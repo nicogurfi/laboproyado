@@ -1,0 +1,49 @@
+<!-- experimento/templates/experimento/finish_experiment.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fin del Experimento</title>
+</head>
+<body>
+    <h2>Gracias por participar en el experimento.</h2>
+</body>
+</html>
+
+<script>
+    // Coloca aquí todo el código JavaScript
+    const csrftoken = getCookie('csrftoken');
+    
+    async function sendResponse(response) {
+        const trial = trials[currentTrial];
+        const reactionTime = 1.0;
+
+        await fetch('/save_response/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify({
+                'trial_id': trial.id,
+                'response': response,
+                'reaction_time': reactionTime,
+            }),
+        });
+
+        // Más lógica de respuesta
+    }
+
+    // Definición de la función showNumbers
+    async function showNumbers(numbers, displayTime, interTime) {
+        for (let numero of numbers) {
+            document.getElementById('stimulus').innerText = numero;
+            await new Promise(resolve => setTimeout(resolve, displayTime * 1000));
+            document.getElementById('stimulus').innerText = '';
+            await new Promise(resolve => setTimeout(resolve, interTime * 1000));
+        }
+    }
+
+    // Resto del código JavaScript
+</script>
+

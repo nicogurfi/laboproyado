@@ -1,0 +1,21 @@
+<!-- experimento/templates/experimento/start_experiment.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Iniciar Experimento</title>
+</head>
+<body>
+    <h2>Preparado para comenzar el experimento.</h2>
+    <button onclick="startExperiment()">Comenzar</button>
+
+    <script>
+        function startExperiment() {
+            window.location.href = `/block/{{ session_id }}/1/`;
+        }
+    </script>
+</body>
+</html>
+
+
+
