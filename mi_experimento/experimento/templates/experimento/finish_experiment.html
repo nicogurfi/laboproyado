@@ -15,6 +15,8 @@
     const csrftoken = getCookie('csrftoken');
     
     async function sendResponse(response) {
+        
+        console.log('called sendResponse from finish_experiment.html')
         const trial = trials[currentTrial];
         const reactionTime = 1.0;
 

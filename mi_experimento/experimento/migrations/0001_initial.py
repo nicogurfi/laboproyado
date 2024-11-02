@@ -62,6 +62,7 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
+                ("trial_id", models.IntegerField()),  # Add trial_id here if needed
                 ("trial_number", models.IntegerField()),
                 ("stimulus", models.CharField(max_length=10)),
                 ("response", models.CharField(blank=True, max_length=10, null=True)),

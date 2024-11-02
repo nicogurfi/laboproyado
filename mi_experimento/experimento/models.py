@@ -13,19 +13,11 @@ class Block(models.Model):
     performance = models.FloatField(null=True, blank=True)
 
 class Trial(models.Model):
-    block = models.ForeignKey(Block, on_delete=models.CASCADE)
-    trial_number = models.IntegerField()
+    id = models.BigAutoField(primary_key=True)
+    block = models.ForeignKey('experimento.Block', on_delete=models.CASCADE)
+    trial_id = models.IntegerField()  # Use trial_id if that’s your requirement
     stimulus = models.CharField(max_length=10)
     response = models.CharField(max_length=10, null=True, blank=True)
     correct = models.BooleanField(null=True, blank=True)
     reaction_time = models.FloatField(null=True, blank=True)
-
-
-class ExperimentResponse(models.Model):
-    trial_id = models.IntegerField()  # El ID del trial, según cómo lo manejes
-    response = models.CharField(max_length=10)  # La respuesta del usuario, por ejemplo "<" o ">"
-    reaction_time = models.FloatField()  # Tiempo de reacción del usuario en segundos
-    timestamp = models.DateTimeField(auto_now_add=True)  # Marca de tiempo de cuando se guardó la respuesta
-
-    def __str__(self):
-        return f'Trial {self.trial_id} - Response: {self.response}'
+    timestamp = models.DateTimeField(auto_now_add=True)
